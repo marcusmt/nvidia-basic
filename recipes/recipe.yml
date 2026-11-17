@@ -1,45 +1,37 @@
 ---
 # yaml-language-server: $schema=https://schema.blue-build.org/recipe-v1.json
-# image will be published to ghcr.io/<user>/<name>
+# Image is published to ghcr.io/marcusmt/nvidia-basic
 name: nvidia-basic
-# description will be included in the image's metadata
-description: This is my personal OS image.
+description: Fedora Kinoite (atomic KDE) + open NVIDIA driver, no extras.
 
-# the base image to build on top of (FROM) and the version tag to use
-base-image: ghcr.io/ublue-os/silverblue-main
-image-version: latest # You can pin to a specific version of Fedora as well
+# Official Kinoite with nvidia-open baked in (maintained by BlueBuild).
+# Pinned version: Fedora only changes when this number changes.
+base-image: ghcr.io/blue-build/base-images/fedora-kinoite-nvidia-open
+image-version: 45
 
-# module configuration, executed in order
-# you can include multiple instances of the same module
 modules:
+  # Copies files/system/* into the image root (custom configs go here).
   - type: files
     files:
       - source: system
-        destination: / # copies files/system/* (* means everything inside it) into your image's root folder /
+        destination: /
 
-  - type: dnf
-    repos:
-      copr:
-        - atim/starship
-    install:
-      packages:
-        - micro
-        - starship
-    remove:
-      packages:
-        # example: removing firefox (in favor of the flatpak)
-        # "firefox" is the main package, "firefox-langpacks" is a dependency
-        - firefox
-        - firefox-langpacks # also remove firefox dependency (not required for all packages, this is a special case)
+  # System packages. One per line, with the reason next to it.
+  # Only list packages under "remove" that exist in the image (see README),
+  # otherwise the build fails.
+  # - type: dnf
+  #   install:
+  #     packages:
+  #       - htop        # example: terminal process monitor
+  #   remove:
+  #     packages:
+  #       - firefox     # example: replace with the Flatpak
+  #       - firefox-langpacks
 
+  # Only enables Flathub, installs no apps.
   - type: default-flatpaks
     configurations:
-      - notify: true # Send notification after install/uninstall is finished (true/false)
-        scope: system
-        # If no repo information is specified, Flathub will be used by default
-        install: # system flatpaks we want all users to have and not remove
-          - org.mozilla.firefox
-          - org.gnome.Loupe
-      - scope: user # Also add Flathub user repo, but no user packages
+      - scope: system
 
-  - type: signing # this sets up the proper policy & signing files for signed images to work fully
+  # Policy and key needed to run the signed image.
+  - type: signing

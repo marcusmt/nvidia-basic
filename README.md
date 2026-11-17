@@ -1,15 +1,18 @@
 # nvidia-basic &nbsp; [![bluebuild build badge](https://github.com/marcusmt/nvidia-basic/actions/workflows/build.yml/badge.svg)](https://github.com/marcusmt/nvidia-basic/actions/workflows/build.yml)
 
-See the [BlueBuild docs](https://blue-build.org/how-to/setup/) for quick setup instructions for setting up your own repository based on this template.
+Fedora Kinoite (atomic KDE) with the open NVIDIA kernel modules (`nvidia-open`) and nothing else.
+Every extra package lives in `recipes/recipe.yml`, with the reason noted next to it.
 
-After setup, it is recommended you update this README to describe your custom image.
+- Base: `ghcr.io/blue-build/base-images/fedora-kinoite-nvidia-open`, Fedora 45
+- Built daily by GitHub Actions and published to `ghcr.io/marcusmt/nvidia-basic`
+- Apps via Flatpak (Flathub enabled), dev environments via distrobox/devcontainers
 
 ## Installation
 
 > [!WARNING]  
 > [This is an experimental feature](https://www.fedoraproject.org/wiki/Changes/OstreeNativeContainerStable), try at your own discretion.
 
-To rebase an existing atomic Fedora installation to the latest build:
+Install the official [Fedora Kinoite](https://fedoraproject.org/atomic-desktops/kinoite/), then rebase to this image:
 
 - First rebase to the unsigned image, to get the proper signing keys and policies installed:
   ```
@@ -29,6 +32,34 @@ To rebase an existing atomic Fedora installation to the latest build:
   ```
 
 The `latest` tag will automatically point to the latest build. That build will still always use the Fedora version specified in `recipe.yml`, so you won't get accidentally updated to the next major version.
+
+## Secure Boot
+
+If it's enabled, enroll the NVIDIA module signing key and confirm it on the blue MOK screen at the next boot:
+
+```bash
+sudo mokutil --import /etc/pki/akmods/certs/akmods-ublue.der
+```
+
+If the file has a different name, `ls /etc/pki/akmods/certs/` shows it. To check that the driver loaded: `lsmod | grep nvidia`.
+
+## Trimming
+
+List the menu apps and the package each one comes from:
+
+```bash
+for f in /usr/share/applications/*.desktop; do
+  grep -q '^NoDisplay=true' "$f" && continue
+  pkg=$(rpm -qf --qf '%{NAME}' "$f" 2>/dev/null) || continue
+  printf '%-30s %s\n' "$pkg" "$(grep -m1 '^Name=' "$f" | cut -d= -f2-)"
+done | sort -u
+```
+
+Add anything you don't want to the `dnf` → `remove` block of the recipe. Once the commit is built: `rpm-ostree upgrade` and reboot.
+
+## Rollback
+
+Pick the previous entry at boot or run `rpm-ostree rollback`. To keep a known-good deployment: `sudo ostree admin pin 0`.
 
 ## ISO
 
