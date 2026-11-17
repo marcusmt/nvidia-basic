@@ -1,18 +1,18 @@
 # nvidia-basic &nbsp; [![bluebuild build badge](https://github.com/marcusmt/nvidia-basic/actions/workflows/build.yml/badge.svg)](https://github.com/marcusmt/nvidia-basic/actions/workflows/build.yml)
 
-Fedora Kinoite (KDE atômico) com o driver aberto da NVIDIA (`nvidia-open`) e mais nada.
-Cada pacote extra está em `recipes/recipe.yml`, com o motivo anotado.
+Fedora Kinoite (atomic KDE) with the open NVIDIA kernel modules (`nvidia-open`) and nothing else.
+Every extra package lives in `recipes/recipe.yml`, with the reason noted next to it.
 
 - Base: `ghcr.io/blue-build/base-images/fedora-kinoite-nvidia-open`, Fedora 45
-- Compilada todo dia pelo GitHub Actions e publicada em `ghcr.io/marcusmt/nvidia-basic`
-- Apps por Flatpak (Flathub já habilitado), dev por distrobox/devcontainer
+- Built daily by GitHub Actions and published to `ghcr.io/marcusmt/nvidia-basic`
+- Apps via Flatpak (Flathub enabled), dev environments via distrobox/devcontainers
 
 ## Installation
 
 > [!WARNING]  
 > [This is an experimental feature](https://www.fedoraproject.org/wiki/Changes/OstreeNativeContainerStable), try at your own discretion.
 
-Instale o [Fedora Kinoite](https://fedoraproject.org/atomic-desktops/kinoite/) oficial e depois mude pra esta imagem:
+Install the official [Fedora Kinoite](https://fedoraproject.org/atomic-desktops/kinoite/), then rebase to this image:
 
 - First rebase to the unsigned image, to get the proper signing keys and policies installed:
   ```
@@ -35,17 +35,17 @@ The `latest` tag will automatically point to the latest build. That build will s
 
 ## Secure Boot
 
-Se estiver ativado, cadastre a chave dos módulos da NVIDIA e confirme na tela azul (MOK) do próximo boot:
+If it's enabled, enroll the NVIDIA module signing key and confirm it on the blue MOK screen at the next boot:
 
 ```bash
 sudo mokutil --import /etc/pki/akmods/certs/akmods-ublue.der
 ```
 
-Se o arquivo tiver outro nome, `ls /etc/pki/akmods/certs/` mostra qual é. Pra conferir que o driver carregou: `lsmod | grep nvidia`.
+If the file has a different name, `ls /etc/pki/akmods/certs/` shows it. To check that the driver loaded: `lsmod | grep nvidia`.
 
-## Enxugar
+## Trimming
 
-Lista os apps do menu e o pacote de onde cada um vem:
+List the menu apps and the package each one comes from:
 
 ```bash
 for f in /usr/share/applications/*.desktop; do
@@ -55,11 +55,11 @@ for f in /usr/share/applications/*.desktop; do
 done | sort -u
 ```
 
-O que não quiser vai no bloco `dnf` → `remove` da receita. Depois do commit e da compilação: `rpm-ostree upgrade` e reiniciar.
+Add anything you don't want to the `dnf` → `remove` block of the recipe. Once the commit is built: `rpm-ostree upgrade` and reboot.
 
 ## Rollback
 
-Escolha a entrada anterior no boot ou rode `rpm-ostree rollback`. Pra guardar uma versão boa: `sudo ostree admin pin 0`.
+Pick the previous entry at boot or run `rpm-ostree rollback`. To keep a known-good deployment: `sudo ostree admin pin 0`.
 
 ## ISO
 

@@ -1,37 +1,37 @@
 ---
 # yaml-language-server: $schema=https://schema.blue-build.org/recipe-v1.json
-# Imagem publicada em ghcr.io/marcusmt/nvidia-basic
+# Image is published to ghcr.io/marcusmt/nvidia-basic
 name: nvidia-basic
-description: Fedora Kinoite (KDE atômico) + driver aberto da NVIDIA, sem extras.
+description: Fedora Kinoite (atomic KDE) + open NVIDIA driver, no extras.
 
-# Kinoite oficial com o nvidia-open já embutido (mantido pelo BlueBuild).
-# Versão fixada: troca de Fedora só quando mudar este número.
+# Official Kinoite with nvidia-open baked in (maintained by BlueBuild).
+# Pinned version: Fedora only changes when this number changes.
 base-image: ghcr.io/blue-build/base-images/fedora-kinoite-nvidia-open
 image-version: 45
 
 modules:
-  # Copia files/system/* para a raiz da imagem (configs próprias vão aqui).
+  # Copies files/system/* into the image root (custom configs go here).
   - type: files
     files:
       - source: system
         destination: /
 
-  # Pacotes do sistema. Cada linha com o motivo ao lado.
-  # Só coloque em "remove" pacotes que existem na imagem (veja o README),
-  # senão a compilação falha.
+  # System packages. One per line, with the reason next to it.
+  # Only list packages under "remove" that exist in the image (see README),
+  # otherwise the build fails.
   # - type: dnf
   #   install:
   #     packages:
-  #       - htop        # exemplo: monitor no terminal
+  #       - htop        # example: terminal process monitor
   #   remove:
   #     packages:
-  #       - firefox     # exemplo: trocar pelo Flatpak
+  #       - firefox     # example: replace with the Flatpak
   #       - firefox-langpacks
 
-  # Só habilita o Flathub, sem instalar nenhum app.
+  # Only enables Flathub, installs no apps.
   - type: default-flatpaks
     configurations:
       - scope: system
 
-  # Política e chave pra rodar a imagem assinada.
+  # Policy and key needed to run the signed image.
   - type: signing
