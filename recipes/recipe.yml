@@ -19,14 +19,75 @@ modules:
   # System packages. One per line, with the reason next to it.
   # Only list packages under "remove" that exist in the image (see README),
   # otherwise the build fails.
-  # - type: dnf
-  #   install:
-  #     packages:
-  #       - htop        # example: terminal process monitor
-  #   remove:
-  #     packages:
-  #       - firefox     # example: replace with the Flatpak
-  #       - firefox-langpacks
+  - type: dnf
+    install:
+      packages:
+        - fish               # shell for the terminal (login shell stays bash)
+        - alacritty          # terminal, no GTK/Qt
+    remove:
+      packages:
+        # VM guest tools: this runs on bare metal
+        - hyperv-daemons
+        - open-vm-tools
+        - open-vm-tools-desktop
+        - qemu-guest-agent
+        - spice-vdagent
+        - spice-webdavd
+        - virtualbox-guest-additions
+        # Asian input methods (base ibus/fcitx5 stay for the keyboard)
+        - ibus-anthy
+        - ibus-anthy-python
+        - ibus-chewing
+        - ibus-hangul
+        - ibus-libpinyin
+        - ibus-m17n
+        - ibus-typing-booster
+        - fcitx5-mozc
+        - fcitx5-chinese-addons
+        - fcitx5-chinese-addons-data
+        - fcitx5-hangul
+        - fcitx5-unikey
+        - fcitx5-sayura
+        - fcitx5-libthai
+        # KDE extras
+        - plasma-welcome
+        - khelpcenter
+        - kwalletmanager5
+        - kdebugsettings
+        - kjournald
+        - kcharselect
+        - kfind
+        - filelight
+        - kde-partitionmanager
+        - plasma-drkonqi
+        - kde-connect
+        - kde-connect-libs
+        - kdeconnectd
+        - krfb
+        - krfb-libs
+        # Kontact/KMail backend, not used
+        - akonadi-server
+        - akonadi-server-mysql
+        # Printer/scanner drivers (driverless IPP via cups stays)
+        - hplip
+        - gutenprint
+        - gutenprint-cups
+        - sane-backends-drivers-scanners
+        - sane-backends-drivers-cameras
+        # No cellular modem / Bluetooth tethering
+        # (ModemManager-glib stays: geoclue2 and fwupd link against it)
+        - ModemManager
+        - NetworkManager-wwan
+        - NetworkManager-bluetooth
+        # SMB server (client stays)
+        - samba
+        - samba-usershares
+        # Misc
+        - htop
+        - firewall-config
+        - toolbox            # distrobox stays
+        - firefox            # browser is Helium (AppImage)
+        - firefox-langpacks
 
   # Only enables Flathub, installs no apps.
   - type: default-flatpaks
