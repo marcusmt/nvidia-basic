@@ -1,0 +1,4 @@
+# plasma-keyboard (the on-screen keyboard) can't be removed: plasma-workspace
+# requires it. An empty input method keeps KWin from starting it.
+[Wayland]
+InputMethod=
