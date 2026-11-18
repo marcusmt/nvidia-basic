@@ -21,7 +21,7 @@ modules:
   # Recreate the ones owned by packages removed below.
   - type: script
     snippets:
-      - mkdir -p /var/lib/hp /run/hplip /var/log/qemu-ga
+      - mkdir -p /var/lib/hp /run/hplip /var/log/qemu-ga /var/lib/hyperv
 
   # System packages. One per line, with the reason next to it.
   # Removal runs in its own module, before any install: once an install
@@ -33,14 +33,18 @@ modules:
     remove:
       packages:
         # VM guest tools: this runs on bare metal
-        - hyperv-daemons
+        - hyperv-daemons     # metapackage; the daemons below stay without them
+        - hypervkvpd
+        - hypervvssd
+        - hypervfcopyd
+        - hyperv-daemons-license
         - open-vm-tools
         - open-vm-tools-desktop
         - qemu-guest-agent
         - spice-vdagent
         - spice-webdavd
         - virtualbox-guest-additions
-        # Asian input methods (base ibus/fcitx5 stay for the keyboard)
+        # Asian input methods (ibus stays; fcitx5 itself goes too, only mozc needed it)
         - ibus-anthy
         - ibus-anthy-python
         - ibus-chewing
