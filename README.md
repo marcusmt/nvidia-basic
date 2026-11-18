@@ -57,6 +57,20 @@ done | sort -u
 
 Add anything you don't want to the `dnf` → `remove` block of the recipe. Once the commit is built: `rpm-ostree upgrade` and reboot.
 
+## Claude Desktop
+
+The official Claude Desktop (Linux beta) is built into the image by `files/scripts/claude-desktop.sh`, which verifies Anthropic's signed apt repository and installs the newest `.deb` the Fedora way. Each image build picks up the newest release, so it updates with `rpm-ostree upgrade`.
+
+Cowork runs its tasks in a QEMU/KVM VM and needs your user in the `kvm` group. On an atomic system that group only exists in `/usr/lib/group`, so copy it to `/etc/group` first, then log out and back in:
+
+```bash
+grep -E '^kvm:' /usr/lib/group | sudo tee -a /etc/group
+```
+
+```bash
+sudo usermod -aG kvm $USER
+```
+
 ## Rollback
 
 Pick the previous entry at boot or run `rpm-ostree rollback`. To keep a known-good deployment: `sudo ostree admin pin 0`.
