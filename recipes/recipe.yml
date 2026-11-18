@@ -2,7 +2,7 @@
 # yaml-language-server: $schema=https://schema.blue-build.org/recipe-v1.json
 # Image is published to ghcr.io/marcusmt/nvidia-basic
 name: nvidia-basic
-description: Fedora Kinoite (atomic KDE) + open NVIDIA driver, no extras.
+description: Debloated Fedora Kinoite with the open NVIDIA driver, fish, Alacritty, Helium and Claude Desktop.
 
 # Official Kinoite with nvidia-open baked in (maintained by BlueBuild).
 # Pinned version: Fedora only changes when this number changes.
@@ -10,31 +10,26 @@ base-image: ghcr.io/blue-build/base-images/fedora-kinoite-nvidia-open
 image-version: 45
 
 modules:
-  # Copies files/system/* into the image root (custom configs go here).
-  - type: files
-    files:
-      - source: system
-        destination: /
-
-  # Removing a package fails the RPM transaction if a path it owns under
-  # /var or /run is missing, and those are empty during a container build.
-  # Recreate the ones owned by packages removed below.
+  # Workarounds for removals that failed the dnf transaction in the CI build.
   - type: script
     snippets:
+      # /var and /run start empty in the build; RPM errored on these missing
+      # paths of packages removed below (hplip, qemu-guest-agent, Hyper-V).
       - mkdir -p /var/lib/hp /run/hplip /var/log/qemu-ga /var/lib/hyperv
-      # akonadi's %postun (update-alternatives --remove) exits 2 in the CI
-      # build and dnf fails the whole transaction on it. Nothing requires these
-      # two, so remove them without scriptlets and drop the alternatives links.
+      # Akonadi (the Kontact/KMail backend, unused): its %postun
+      # (update-alternatives --remove) exits 2 in CI. Nothing requires these
+      # two, so remove them without scriptlets and drop their alternatives.
       - >-
         rpm -e --noscripts akonadi-server-mysql akonadi-server &&
-        rm -f /etc/alternatives/akonadiserverrc /etc/xdg/akonadi/akonadiserverrc &&
+        rm -f /etc/alternatives/akonadiserverrc /etc/xdg/akonadi/akonadiserverrc
+        /etc/alternatives-admindir/akonadiserverrc &&
         rmdir --ignore-fail-on-non-empty /etc/xdg/akonadi
 
-  # System packages. One per line, with the reason next to it.
-  # Only list packages under "remove" that exist in the image (see README),
-  # otherwise the build fails.
+  # System packages, one per line with the reason next to it. Packages that
+  # aren't in the image are skipped, so check names with `rpm -q` first.
   - type: dnf
     repos:
+      cleanup: true          # don't leave the COPR enabled in the image
       copr:
         - imput/helium       # official Helium COPR
     install:
@@ -49,10 +44,15 @@ modules:
         - ffmpeg-free
         - ffmpegthumbnailer
         - gstreamer1-plugin-libav
+        # Claude Desktop (installed by claude-desktop.sh below)
+        - binutils           # `ar`, to unpack the .deb
+        - qemu-system-x86-core  # Cowork runs its tasks in a QEMU/KVM VM
+        - edk2-ovmf
+        - virtiofsd
     remove:
       packages:
         # VM guest tools: this runs on bare metal
-        - hyperv-daemons     # metapackage; the daemons below stay without them
+        - hyperv-daemons     # metapackage only; its daemons are listed below
         - hypervkvpd
         - hypervvssd
         - hypervfcopyd
@@ -91,11 +91,11 @@ modules:
         - dolphin-plugins
         - konsole            # replaced by Alacritty
         - konsole-part
-        - kate               # replaced by Zed (kwrited stays: plasma-desktop needs it)
+        - kate               # replaced by Zed
         - kate-libs
         - kate-plugins
         - kate-krunner-plugin
-        - kwrite
+        - kwrite             # (kwrited, the write(1) daemon, stays: plasma-desktop needs it)
         - filelight
         - kde-partitionmanager
         - plasma-drkonqi
@@ -104,7 +104,7 @@ modules:
         - kdeconnectd
         - krfb
         - krfb-libs
-        # (Akonadi, the unused Kontact/KMail backend, is removed by the script above)
+        # (Akonadi is removed by the script at the top)
         # Printer/scanner drivers (driverless IPP via cups stays)
         - hplip
         - gutenprint
@@ -127,8 +127,8 @@ modules:
         - firefox-langpacks
 
   # Official Claude Desktop (Linux beta). Anthropic only ships a .deb; the
-  # script verifies it against Anthropic's signing key and installs it
-  # the Fedora way. Each image build picks up the newest release.
+  # script verifies it against Anthropic's signing key and unpacks it into
+  # /usr. Each image build picks up the newest release.
   - type: script
     scripts:
       - claude-desktop.sh
