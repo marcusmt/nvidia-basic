@@ -134,6 +134,25 @@ modules:
     scripts:
       - claude-desktop.sh
 
+  # Config for this laptop (HP Omen, RTX 4090 in dGPU mode), each file
+  # commented: tuned profile, Wi-Fi power save, shutdown timeout and
+  # initramfs drivers. Everything under files/system/.
+  - type: files
+    files:
+      - source: system
+        destination: /
+
+  # The "Performance" power profile uses the tuned profile from files/system
+  # instead of throughput-performance (a server profile).
+  - type: script
+    snippets:
+      - >-
+        sed -i 's/^performance=.*/performance=omen-performance/' /etc/tuned/ppd.conf &&
+        grep -qx 'performance=omen-performance' /etc/tuned/ppd.conf
+
+  # Rebuild the initramfs with the dracut config from files/system.
+  - type: initramfs
+
   # Only enables Flathub, installs no apps.
   - type: default-flatpaks
     configurations:

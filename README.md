@@ -4,6 +4,7 @@ A debloated Fedora Kinoite (atomic KDE) with the open NVIDIA kernel modules (`nv
 
 - Base: `ghcr.io/blue-build/base-images/fedora-kinoite-nvidia-open`, Fedora 45
 - Apps via Flatpak (Flathub enabled), dev environments via distrobox/devcontainers
+- Tuned for an HP Omen with an RTX 4090 in dGPU (MUX) mode, see [Tuning](#tuning)
 
 ## Changes from stock Kinoite
 
@@ -12,6 +13,15 @@ Every package change is in the recipe, with the reason next to it.
 - **Added:** fish, Alacritty, Helium (from its official COPR), gcc (for Neovim's tree-sitter parsers), [Claude Desktop](#claude-desktop), and the runtime libraries of the Strata file manager.
 - **Removed:** VM guest tools, Asian input methods, Dolphin, Konsole, Kate/KWrite, other unused KDE apps, Akonadi, printer and scanner drivers (driverless printing stays), ModemManager/WWAN, the Samba server, toolbox (distrobox stays) and Firefox.
 - **Per user, not in the image:** Strata and Zed, which install and update themselves.
+
+## Tuning
+
+The config lives in [`files/system/`](files/system), one commented file per change:
+
+- **Performance power profile:** the `omen-performance` tuned profile instead of `throughput-performance`, a server profile that lets ~12 GB of writes pile up in RAM. It caps that at 256 MB and turns off the NMI watchdog.
+- **Wi-Fi:** power save off.
+- **Shutdown:** services get 15 s to stop instead of 45 s.
+- **Initramfs:** only the NVIDIA driver (no i915, amdgpu or nouveau and their firmware): 308 MB → 173 MB, and the initrd stage goes from 9.6 s to 5.5 s. In hybrid mode the Intel driver loads after the initramfs instead.
 
 ## Installation
 
