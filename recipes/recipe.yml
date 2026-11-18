@@ -20,10 +20,14 @@ modules:
   # Only list packages under "remove" that exist in the image (see README),
   # otherwise the build fails.
   - type: dnf
+    repos:
+      copr:
+        - imput/helium       # official Helium COPR
     install:
       packages:
         - fish               # shell for the terminal (login shell stays bash)
         - alacritty          # terminal, no GTK/Qt
+        - helium-bin         # browser (replaces Firefox)
     remove:
       packages:
         # VM guest tools: this runs on bare metal
@@ -86,7 +90,7 @@ modules:
         - htop
         - firewall-config
         - toolbox            # distrobox stays
-        - firefox            # browser is Helium (AppImage)
+        - firefox            # browser is Helium
         - firefox-langpacks
 
   # Only enables Flathub, installs no apps.
