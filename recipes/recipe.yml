@@ -37,6 +37,7 @@ modules:
         - fish               # shell for the terminal (login shell stays bash)
         - alacritty          # terminal, no GTK/Qt
         - helium-bin         # browser (replaces Firefox)
+        - gcc                # C compiler: Neovim's tree-sitter builds its parsers
         # runtime deps of Strata (file manager, installed per-user by its
         # own installer, which does not install deps outside Arch)
         - gtksourceview5
@@ -104,8 +105,16 @@ modules:
         - kdeconnectd
         - krfb
         - krfb-libs
+        - plasma-discover    # software center; Flatpak via the flatpak CLI
+        - plasma-discover-flatpak
+        - plasma-discover-kns
+        - plasma-discover-libs
+        - plasma-discover-notifier
+        - kunifiedpush       # push notification distributor, nothing uses it
+        - orca               # screen reader
         # (Akonadi is removed by the script at the top)
-        # Printer/scanner drivers (driverless IPP via cups stays)
+        # Printer/scanner drivers (driverless IPP via cups stays; Avahi is off
+        # below, so printers are added by address, not discovered)
         - hplip
         - gutenprint
         - gutenprint-cups
@@ -125,6 +134,9 @@ modules:
         - toolbox            # distrobox stays
         - firefox            # browser is Helium
         - firefox-langpacks
+        # Intel video decoding: in dGPU (MUX) mode the iGPU is hidden
+        - libva-intel-media-driver
+        - intel-mediasdk
 
   # Official Claude Desktop (Linux beta). Anthropic only ships a .deb; the
   # script verifies it against Anthropic's signing key and unpacks it into
@@ -132,6 +144,44 @@ modules:
   - type: script
     scripts:
       - claude-desktop.sh
+
+  # Config for this laptop (HP Omen, RTX 4090 in dGPU mode), each file
+  # commented: tuned profile, Wi-Fi power save, shutdown timeout, initramfs
+  # drivers and the on-screen keyboard. Everything under files/system/.
+  - type: files
+    files:
+      - source: system
+        destination: /
+
+  # The "Performance" power profile uses the tuned profile from files/system
+  # instead of throughput-performance (a server profile).
+  - type: script
+    snippets:
+      - >-
+        sed -i 's/^performance=.*/performance=omen-performance/' /etc/tuned/ppd.conf &&
+        grep -qx 'performance=omen-performance' /etc/tuned/ppd.conf
+
+  # Services this laptop doesn't use.
+  - type: systemd
+    system:
+      disabled:
+        - avahi-daemon.service     # mDNS: add printers by address
+        - avahi-daemon.socket
+        - intel_lpmd.service       # Intel low-power mode, against the Performance profile
+        - mcelog.service           # machine-check logging
+      masked:
+        - switcheroo-control.service   # GPU switching: one GPU in dGPU mode
+        - gssproxy.service             # Kerberos/NFS credentials
+        - raid-check.timer             # no software RAID
+        - unbound-anchor.timer         # DNSSEC anchor for unbound, not used
+        - rpm-ostree-countme.timer     # Fedora's anonymous user count
+        - fedora-atomic-desktop-appstream-cache-refresh.service  # cache for Discover, removed above
+    user:
+      masked:
+        - plasma-startupsound.service
+
+  # Rebuild the initramfs with the dracut config from files/system.
+  - type: initramfs
 
   # Only enables Flathub, installs no apps.
   - type: default-flatpaks
