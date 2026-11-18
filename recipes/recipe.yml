@@ -16,17 +16,122 @@ modules:
       - source: system
         destination: /
 
+  # Removing a package fails the RPM transaction if a path it owns under
+  # /var or /run is missing, and those are empty during a container build.
+  # Recreate the ones owned by packages removed below.
+  - type: script
+    snippets:
+      - mkdir -p /var/lib/hp /run/hplip /var/log/qemu-ga /var/lib/hyperv
+      # akonadi's %postun (update-alternatives --remove) exits 2 in the CI
+      # build and dnf fails the whole transaction on it. Nothing requires these
+      # two, so remove them without scriptlets and drop the alternatives links.
+      - >-
+        rpm -e --noscripts akonadi-server-mysql akonadi-server &&
+        rm -f /etc/alternatives/akonadiserverrc /etc/xdg/akonadi/akonadiserverrc &&
+        rmdir --ignore-fail-on-non-empty /etc/xdg/akonadi
+
   # System packages. One per line, with the reason next to it.
   # Only list packages under "remove" that exist in the image (see README),
   # otherwise the build fails.
-  # - type: dnf
-  #   install:
-  #     packages:
-  #       - htop        # example: terminal process monitor
-  #   remove:
-  #     packages:
-  #       - firefox     # example: replace with the Flatpak
-  #       - firefox-langpacks
+  - type: dnf
+    repos:
+      copr:
+        - imput/helium       # official Helium COPR
+    install:
+      packages:
+        - fish               # shell for the terminal (login shell stays bash)
+        - alacritty          # terminal, no GTK/Qt
+        - helium-bin         # browser (replaces Firefox)
+        # runtime deps of Strata (file manager, installed per-user by its
+        # own installer, which does not install deps outside Arch)
+        - gtksourceview5
+        - poppler-glib
+        - ffmpeg-free
+        - ffmpegthumbnailer
+        - gstreamer1-plugin-libav
+    remove:
+      packages:
+        # VM guest tools: this runs on bare metal
+        - hyperv-daemons     # metapackage; the daemons below stay without them
+        - hypervkvpd
+        - hypervvssd
+        - hypervfcopyd
+        - hyperv-daemons-license
+        - open-vm-tools
+        - open-vm-tools-desktop
+        - qemu-guest-agent
+        - spice-vdagent
+        - spice-webdavd
+        - virtualbox-guest-additions
+        # Asian input methods (ibus stays; fcitx5 itself goes too, only mozc needed it)
+        - ibus-anthy
+        - ibus-anthy-python
+        - ibus-chewing
+        - ibus-hangul
+        - ibus-libpinyin
+        - ibus-m17n
+        - ibus-typing-booster
+        - fcitx5-mozc
+        - fcitx5-chinese-addons
+        - fcitx5-chinese-addons-data
+        - fcitx5-hangul
+        - fcitx5-unikey
+        - fcitx5-sayura
+        - fcitx5-libthai
+        # KDE extras
+        - plasma-welcome
+        - khelpcenter
+        - kwalletmanager5
+        - kdebugsettings
+        - kjournald
+        - kcharselect
+        - kfind
+        - dolphin            # replaced by Strata
+        - dolphin-libs
+        - dolphin-plugins
+        - konsole            # replaced by Alacritty
+        - konsole-part
+        - kate               # replaced by Zed (kwrited stays: plasma-desktop needs it)
+        - kate-libs
+        - kate-plugins
+        - kate-krunner-plugin
+        - kwrite
+        - filelight
+        - kde-partitionmanager
+        - plasma-drkonqi
+        - kde-connect
+        - kde-connect-libs
+        - kdeconnectd
+        - krfb
+        - krfb-libs
+        # (Akonadi, the unused Kontact/KMail backend, is removed by the script above)
+        # Printer/scanner drivers (driverless IPP via cups stays)
+        - hplip
+        - gutenprint
+        - gutenprint-cups
+        - sane-backends-drivers-scanners
+        - sane-backends-drivers-cameras
+        # No cellular modem / Bluetooth tethering
+        # (ModemManager-glib stays: geoclue2 and fwupd link against it)
+        - ModemManager
+        - NetworkManager-wwan
+        - NetworkManager-bluetooth
+        # SMB server (client stays)
+        - samba
+        - samba-usershares
+        # Misc
+        - htop
+        - firewall-config
+        - toolbox            # distrobox stays
+        - firefox            # browser is Helium
+        - firefox-langpacks
+
+  # Official Claude Desktop (Linux beta). Anthropic only ships a .deb; the
+  # script verifies it against Anthropic's signing key and installs it
+  # the Fedora way. Each image build picks up the newest release.
+  - type: script
+    scripts:
+      - claude-desktop.sh
 
   # Only enables Flathub, installs no apps.
   - type: default-flatpaks
