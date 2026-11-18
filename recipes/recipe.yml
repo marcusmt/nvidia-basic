@@ -28,6 +28,13 @@ modules:
         - fish               # shell for the terminal (login shell stays bash)
         - alacritty          # terminal, no GTK/Qt
         - helium-bin         # browser (replaces Firefox)
+        # runtime deps of Strata (file manager, installed per-user by its
+        # own installer, which does not install deps outside Arch)
+        - gtksourceview5
+        - poppler-glib
+        - ffmpeg-free
+        - ffmpegthumbnailer
+        - gstreamer1-plugin-libav
     remove:
       packages:
         # VM guest tools: this runs on bare metal
@@ -61,6 +68,9 @@ modules:
         - kjournald
         - kcharselect
         - kfind
+        - dolphin            # replaced by Strata
+        - dolphin-libs
+        - dolphin-plugins
         - filelight
         - kde-partitionmanager
         - plasma-drkonqi
