@@ -16,6 +16,13 @@ modules:
       - source: system
         destination: /
 
+  # Removing a package fails the RPM transaction if a path it owns under
+  # /var or /run is missing, and those are empty during a container build.
+  # Recreate the ones owned by packages removed below.
+  - type: script
+    snippets:
+      - mkdir -p /var/lib/hp /run/hplip /var/log/qemu-ga
+
   # System packages. One per line, with the reason next to it.
   # Only list packages under "remove" that exist in the image (see README),
   # otherwise the build fails.
