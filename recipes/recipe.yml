@@ -24,24 +24,12 @@ modules:
       - mkdir -p /var/lib/hp /run/hplip /var/log/qemu-ga
 
   # System packages. One per line, with the reason next to it.
+  # Removal runs in its own module, before any install: once an install
+  # creates /var/lib/alternatives, akonadi's %postun (update-alternatives
+  # --remove) exits 2 and dnf fails the whole transaction.
   # Only list packages under "remove" that exist in the image (see README),
   # otherwise the build fails.
   - type: dnf
-    repos:
-      copr:
-        - imput/helium       # official Helium COPR
-    install:
-      packages:
-        - fish               # shell for the terminal (login shell stays bash)
-        - alacritty          # terminal, no GTK/Qt
-        - helium-bin         # browser (replaces Firefox)
-        # runtime deps of Strata (file manager, installed per-user by its
-        # own installer, which does not install deps outside Arch)
-        - gtksourceview5
-        - poppler-glib
-        - ffmpeg-free
-        - ffmpegthumbnailer
-        - gstreamer1-plugin-libav
     remove:
       packages:
         # VM guest tools: this runs on bare metal
@@ -116,6 +104,30 @@ modules:
         - toolbox            # distrobox stays
         - firefox            # browser is Helium
         - firefox-langpacks
+
+  - type: dnf
+    repos:
+      copr:
+        - imput/helium       # official Helium COPR
+    install:
+      packages:
+        - fish               # shell for the terminal (login shell stays bash)
+        - alacritty          # terminal, no GTK/Qt
+        - helium-bin         # browser (replaces Firefox)
+        # runtime deps of Strata (file manager, installed per-user by its
+        # own installer, which does not install deps outside Arch)
+        - gtksourceview5
+        - poppler-glib
+        - ffmpeg-free
+        - ffmpegthumbnailer
+        - gstreamer1-plugin-libav
+
+  # Official Claude Desktop (Linux beta). Anthropic only ships a .deb; the
+  # script verifies it against Anthropic's signing key and installs it
+  # the Fedora way. Each image build picks up the newest release.
+  - type: script
+    scripts:
+      - claude-desktop.sh
 
   # Only enables Flathub, installs no apps.
   - type: default-flatpaks
