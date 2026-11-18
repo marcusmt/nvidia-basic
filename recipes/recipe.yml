@@ -71,6 +71,13 @@ modules:
         - dolphin            # replaced by Strata
         - dolphin-libs
         - dolphin-plugins
+        - konsole            # replaced by Alacritty
+        - konsole-part
+        - kate               # replaced by Zed (kwrited stays: plasma-desktop needs it)
+        - kate-libs
+        - kate-plugins
+        - kate-krunner-plugin
+        - kwrite
         - filelight
         - kde-partitionmanager
         - plasma-drkonqi
