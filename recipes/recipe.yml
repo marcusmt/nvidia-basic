@@ -37,6 +37,7 @@ modules:
         - fish               # shell for the terminal (login shell stays bash)
         - alacritty          # terminal, no GTK/Qt
         - helium-bin         # browser (replaces Firefox)
+        - gcc                # C compiler: Neovim's tree-sitter builds its parsers
         # runtime deps of Strata (file manager, installed per-user by its
         # own installer, which does not install deps outside Arch)
         - gtksourceview5

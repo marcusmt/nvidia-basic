@@ -9,7 +9,7 @@ A debloated Fedora Kinoite (atomic KDE) with the open NVIDIA kernel modules (`nv
 
 Every package change is in the recipe, with the reason next to it.
 
-- **Added:** fish, Alacritty, Helium (from its official COPR), [Claude Desktop](#claude-desktop), and the runtime libraries of the Strata file manager.
+- **Added:** fish, Alacritty, Helium (from its official COPR), gcc (for Neovim's tree-sitter parsers), [Claude Desktop](#claude-desktop), and the runtime libraries of the Strata file manager.
 - **Removed:** VM guest tools, Asian input methods, Dolphin, Konsole, Kate/KWrite, other unused KDE apps, Akonadi, printer and scanner drivers (driverless printing stays), ModemManager/WWAN, the Samba server, toolbox (distrobox stays) and Firefox.
 - **Per user, not in the image:** Strata and Zed, which install and update themselves.
 
